@@ -1,0 +1,195 @@
+-- MySQL dump 10.13  Distrib 8.0.27, for macos11 (x86_64)
+--
+-- Host: 192.168.20.104    Database: bibliotheque
+-- ------------------------------------------------------
+-- Server version	8.4.4
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!50503 SET NAMES utf8mb4 */;
+/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
+/*!40103 SET TIME_ZONE='+00:00' */;
+/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
+/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
+/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
+/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+
+--
+-- Table structure for table `adherents`
+--
+
+DROP TABLE IF EXISTS `adherents`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `adherents` (
+  `id_adherent` int NOT NULL AUTO_INCREMENT,
+  `nom` varchar(100) NOT NULL,
+  `adresse` varchar(255) NOT NULL,
+  `date_inscription` date NOT NULL,
+  `a_surveiller` tinyint(1) NOT NULL,
+  PRIMARY KEY (`id_adherent`)
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb3;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `adherents`
+--
+
+LOCK TABLES `adherents` WRITE;
+/*!40000 ALTER TABLE `adherents` DISABLE KEYS */;
+INSERT INTO `adherents` VALUES (1,'Jane Austen','Steventon, Royaume-Uni','1775-12-16',0),(2,'Charles Dickens','Landport, Portsmouth, Royaume-Uni','1812-02-07',0),(3,'Jules Verne','Nantes, France','1828-02-08',0);
+/*!40000 ALTER TABLE `adherents` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `emprunts`
+--
+
+DROP TABLE IF EXISTS `emprunts`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `emprunts` (
+  `id_adherent` int NOT NULL,
+  `isbn` varchar(13) NOT NULL,
+  `date_emprunt` date NOT NULL,
+  `date_retour` date NOT NULL,
+  PRIMARY KEY (`id_adherent`,`isbn`),
+  KEY `isbn` (`isbn`),
+  CONSTRAINT `emprunts_ibfk_1` FOREIGN KEY (`id_adherent`) REFERENCES `adherents` (`id_adherent`) ON DELETE CASCADE,
+  CONSTRAINT `emprunts_ibfk_2` FOREIGN KEY (`isbn`) REFERENCES `livres` (`isbn`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `emprunts`
+--
+
+LOCK TABLES `emprunts` WRITE;
+/*!40000 ALTER TABLE `emprunts` DISABLE KEYS */;
+INSERT INTO `emprunts` VALUES (1,'9782266196772','2025-03-20','2025-04-19'),(2,'9782210758810','2025-03-12','2025-04-11'),(3,'9782253088905','2025-02-15','2025-03-14');
+/*!40000 ALTER TABLE `emprunts` ENABLE KEYS */;
+UNLOCK TABLES;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50017 DEFINER=`admin`@`%`*/ /*!50003 TRIGGER `maj_dispo_si_date_retour` AFTER UPDATE ON `emprunts` FOR EACH ROW BEGIN
+    IF NEW.date_retour IS NOT NULL THEN
+        UPDATE livres
+        SET disponible = TRUE
+        WHERE isbn = NEW.isbn;
+    END IF;
+END */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+
+--
+-- Table structure for table `livres`
+--
+
+DROP TABLE IF EXISTS `livres`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `livres` (
+  `isbn` varchar(13) NOT NULL,
+  `titre` varchar(255) NOT NULL,
+  `auteur` varchar(100) NOT NULL,
+  `annee_publication` int NOT NULL,
+  `disponible` tinyint(1) NOT NULL,
+  PRIMARY KEY (`isbn`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `livres`
+--
+
+LOCK TABLES `livres` WRITE;
+/*!40000 ALTER TABLE `livres` DISABLE KEYS */;
+INSERT INTO `livres` VALUES ('9782013227445','David Copperfield','Charles Dickens',1850,1),('9782210758810','Vingt mille lieues sous les mers','Jules Verne',1870,1),('9782253088905','Orgueil et Préjugés','Jane Austen',1813,1),('9782266196772','Frankenstein','Mary Shelley',1818,1);
+/*!40000 ALTER TABLE `livres` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Temporary view structure for view `livres_en_retard`
+--
+
+DROP TABLE IF EXISTS `livres_en_retard`;
+/*!50001 DROP VIEW IF EXISTS `livres_en_retard`*/;
+SET @saved_cs_client     = @@character_set_client;
+/*!50503 SET character_set_client = utf8mb4 */;
+/*!50001 CREATE VIEW `livres_en_retard` AS SELECT 
+ 1 AS `Adhérent`,
+ 1 AS `Adresse`,
+ 1 AS `Livre`,
+ 1 AS `Auteur`,
+ 1 AS `Date d'emprunt`,
+ 1 AS `Date de retour`*/;
+SET character_set_client = @saved_cs_client;
+
+--
+-- Dumping routines for database 'bibliotheque'
+--
+/*!50003 DROP PROCEDURE IF EXISTS `surveiller_retards` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`admin`@`%` PROCEDURE `surveiller_retards`()
+BEGIN
+    UPDATE adherents
+    SET a_surveiller = TRUE
+    WHERE id_adherent IN (
+        SELECT e.id_adherent
+        FROM emprunts e
+        WHERE e.date_retour < CURDATE() - INTERVAL 30 DAY
+    );
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+
+--
+-- Final view structure for view `livres_en_retard`
+--
+
+/*!50001 DROP VIEW IF EXISTS `livres_en_retard`*/;
+/*!50001 SET @saved_cs_client          = @@character_set_client */;
+/*!50001 SET @saved_cs_results         = @@character_set_results */;
+/*!50001 SET @saved_col_connection     = @@collation_connection */;
+/*!50001 SET character_set_client      = utf8mb4 */;
+/*!50001 SET character_set_results     = utf8mb4 */;
+/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 CREATE ALGORITHM=UNDEFINED */
+/*!50013 DEFINER=`admin`@`%` SQL SECURITY DEFINER */
+/*!50001 VIEW `livres_en_retard` AS select `a`.`nom` AS `Adhérent`,`a`.`adresse` AS `Adresse`,`l`.`titre` AS `Livre`,`l`.`auteur` AS `Auteur`,`e`.`date_emprunt` AS `Date d'emprunt`,`e`.`date_retour` AS `Date de retour` from ((`emprunts` `e` join `adherents` `a` on((`e`.`id_adherent` = `a`.`id_adherent`))) join `livres` `l` on((`e`.`isbn` = `l`.`isbn`))) where (`e`.`date_retour` < curdate()) */;
+/*!50001 SET character_set_client      = @saved_cs_client */;
+/*!50001 SET character_set_results     = @saved_cs_results */;
+/*!50001 SET collation_connection      = @saved_col_connection */;
+/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
+
+/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
+/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
+/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
+
+-- Dump completed on 2025-03-20 15:57:42
